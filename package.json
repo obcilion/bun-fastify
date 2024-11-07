@@ -1,0 +1,18 @@
+{
+  "name": "bun-fastify",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "^1.1.13",
+    "prettier": "^3.3.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@fastify/type-provider-typebox": "^5.0.1",
+    "@sinclair/typebox": "^0.33.20",
+    "@turf/turf": "^7.1.0",
+    "fastify": "^5.1.0"
+  }
+}

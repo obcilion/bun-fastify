@@ -4,6 +4,8 @@ import {
   GeoJsonFeatureSchema,
 } from "./geoJson";
 
+export const BuildingLimitsSchema = GeoJsonFeatureCollectionSchema;
+
 export const HeightPlateauSchema = Type.Intersect([
   GeoJsonFeatureSchema,
   Type.Object({
@@ -20,8 +22,8 @@ export const HeightPlateausSchema = Type.Intersect([
   }),
 ]);
 
-export type BuildingArea = Static<typeof BuildingAreaSchema>;
+export type BuildingAreaInput = Static<typeof BuildingAreaSchema>;
 export const BuildingAreaSchema = Type.Object({
-  building_limits: GeoJsonFeatureCollectionSchema,
+  building_limits: BuildingLimitsSchema,
   height_plateaus: HeightPlateausSchema,
 });

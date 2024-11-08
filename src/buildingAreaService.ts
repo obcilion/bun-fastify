@@ -54,15 +54,15 @@ export class BuildingAreaService {
     //   it's counted as an error
     const areaErrorMarginM2 = 5; // No idea if this is a realistic number
 
-    const buildingLimitArea = data.buildingLimits.features
+    const buildingLimitAreaM2 = data.buildingLimits.features
       .map((feature) => area(feature))
       .reduce((accumulator, current) => accumulator + current);
 
-    const splitBuildingLimitsArea = data.splitBuildingLimits.features
+    const splitBuildingLimitsAreaM2 = data.splitBuildingLimits.features
       .map((feature) => area(feature))
       .reduce((accumulator, current) => accumulator + current);
 
-    if (splitBuildingLimitsArea < buildingLimitArea - areaErrorMarginM2) {
+    if (splitBuildingLimitsAreaM2 < buildingLimitAreaM2 - areaErrorMarginM2) {
       errors.push(
         "The height plateaus does not sufficiently cover the building limit"
       );

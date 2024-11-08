@@ -1,7 +1,13 @@
 import { expect, test, describe } from "bun:test";
-import type { BuildingAreaInput } from "../src/schemas";
 import { BuildingAreaService } from "../src/buildingAreaService";
 import { booleanEqual, polygon } from "@turf/turf";
+import {
+  getBuildingAreaInput,
+  getMiddlebLimCoords,
+  getLeftHPlatCoords,
+  getRightHPlatCoords,
+  getSmallLeftHPlatCoords,
+} from "./dataGenerators";
 
 // TODO: dependency injection
 const buildingAreaService = new BuildingAreaService();
@@ -81,97 +87,3 @@ describe("BuildingAreaService", () => {
     });
   });
 });
-
-function getMiddlebLimCoords() {
-  return [
-    [
-      [2.0, 3.0],
-      [5.0, 3.0],
-      [5.0, 5.0],
-      [2.0, 5.0],
-      [2.0, 3.0],
-    ],
-  ];
-}
-
-function getLeftHPlatCoords() {
-  return [
-    [
-      [1.0, 1.0],
-      [3.0, 1.0],
-      [3.0, 6.0],
-      [1.0, 6.0],
-      [1.0, 1.0],
-    ],
-  ];
-}
-
-function getSmallLeftHPlatCoords() {
-  return [
-    [
-      [1.0, 4.0],
-      [3.0, 4.0],
-      [3.0, 6.0],
-      [1.0, 6.0],
-      [1.0, 4.0],
-    ],
-  ];
-}
-
-function getRightHPlatCoords() {
-  return [
-    [
-      [3.0, 1.0],
-      [6.0, 1.0],
-      [6.0, 6.0],
-      [3.0, 6.0],
-      [3.0, 1.0],
-    ],
-  ];
-}
-
-function getBuildingAreaInput(
-  bLimCoords: number[][][],
-  hPlat1Coords: number[][][],
-  hPlat2Coords: number[][][]
-): BuildingAreaInput {
-  return {
-    building_limits: {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: bLimCoords,
-          },
-        },
-      ],
-    },
-    height_plateaus: {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: hPlat1Coords,
-          },
-          properties: {
-            elevation: 1,
-          },
-        },
-        {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: hPlat2Coords,
-          },
-          properties: {
-            elevation: 2,
-          },
-        },
-      ],
-    },
-  } as BuildingAreaInput;
-}

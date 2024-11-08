@@ -9,7 +9,11 @@ const buildingAreaService = new BuildingAreaService();
 describe("BuildingAreaService", () => {
   describe("processAreaData", () => {
     test("it splits the building limit correctly", () => {
-      const testData = getDefaultBuildingAreaInput();
+      const testData = getBuildingAreaInput(
+        getMiddlebLimCoords(),
+        getLeftHPlatCoords(),
+        getRightHPlatCoords()
+      );
       const processedAreaData = buildingAreaService.processAreaData(testData);
 
       const expectedSplitPolygons = [
@@ -39,25 +43,47 @@ describe("BuildingAreaService", () => {
         ),
       ];
 
+      expect(processedAreaData.success).toBe(true);
+
+      if (processedAreaData.success === false) {
+        return;
+      }
+
       expect(
         booleanEqual(
           expectedSplitPolygons[0],
-          processedAreaData.splitBuildingLimits.features[0]
+          processedAreaData.data.splitBuildingLimits.features[0]
         )
       ).toBe(true);
 
       expect(
         booleanEqual(
           expectedSplitPolygons[1],
-          processedAreaData.splitBuildingLimits.features[1]
+          processedAreaData.data.splitBuildingLimits.features[1]
         )
       ).toBe(true);
+    });
+
+    test("it returns a validation error when the plateaus does not cover the building limit", () => {
+      const testData = getBuildingAreaInput(
+        getMiddlebLimCoords(),
+        getSmallLeftHPlatCoords(), // Does not cover the building limit
+        getRightHPlatCoords()
+      );
+      const processedAreaData = buildingAreaService.processAreaData(testData);
+      expect(processedAreaData.success).toBe(false);
+
+      if (processedAreaData.success) {
+        return;
+      }
+
+      expect(processedAreaData.errors.length).toBe(1);
     });
   });
 });
 
-function getDefaultBuildingAreaInput(): BuildingAreaInput {
-  const bLimCoords = [
+function getMiddlebLimCoords() {
+  return [
     [
       [2.0, 3.0],
       [5.0, 3.0],
@@ -66,8 +92,10 @@ function getDefaultBuildingAreaInput(): BuildingAreaInput {
       [2.0, 3.0],
     ],
   ];
+}
 
-  const hPlat1Coords = [
+function getLeftHPlatCoords() {
+  return [
     [
       [1.0, 1.0],
       [3.0, 1.0],
@@ -76,7 +104,22 @@ function getDefaultBuildingAreaInput(): BuildingAreaInput {
       [1.0, 1.0],
     ],
   ];
-  const hPlat2Coords = [
+}
+
+function getSmallLeftHPlatCoords() {
+  return [
+    [
+      [1.0, 4.0],
+      [3.0, 4.0],
+      [3.0, 6.0],
+      [1.0, 6.0],
+      [1.0, 4.0],
+    ],
+  ];
+}
+
+function getRightHPlatCoords() {
+  return [
     [
       [3.0, 1.0],
       [6.0, 1.0],
@@ -85,7 +128,13 @@ function getDefaultBuildingAreaInput(): BuildingAreaInput {
       [3.0, 1.0],
     ],
   ];
+}
 
+function getBuildingAreaInput(
+  bLimCoords: number[][][],
+  hPlat1Coords: number[][][],
+  hPlat2Coords: number[][][]
+): BuildingAreaInput {
   return {
     building_limits: {
       type: "FeatureCollection",

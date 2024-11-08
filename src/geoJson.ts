@@ -4,7 +4,13 @@ export type GeoJsonPolygon = Static<typeof GeoJsonPolygonSchema>;
 export const GeoJsonPolygonSchema = Type.Object({
   type: Type.Literal("Polygon"),
   coordinates: Type.Array(
-    Type.Array(Type.Tuple([Type.Number(), Type.Number()]))
+    Type.Array(
+      Type.Tuple([
+        Type.Number({ minimum: -180, maximum: 180 }), // Longitude
+        Type.Number({ minimum: -90, maximum: 90 }), // Latitude
+      ]),
+      { minItems: 3 }
+    )
   ),
 });
 
@@ -23,5 +29,5 @@ export type GeoJsonFeatureCollection = Static<
 >;
 export const GeoJsonFeatureCollectionSchema = Type.Object({
   type: Type.Literal("FeatureCollection"),
-  features: Type.Array(GeoJsonFeatureSchema),
+  features: Type.Array(GeoJsonFeatureSchema, { minItems: 1 }),
 });

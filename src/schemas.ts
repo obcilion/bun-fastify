@@ -10,7 +10,8 @@ export const HeightPlateauSchema = Type.Intersect([
   GeoJsonFeatureSchema,
   Type.Object({
     properties: Type.Object({
-      elevation: Type.Number(),
+      // Does negative elevation make sense?
+      elevation: Type.Number({ minimum: 0 }),
     }),
   }),
 ]);

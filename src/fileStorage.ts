@@ -22,7 +22,7 @@ export class FileStorage implements Storage<ProcessedAreaData> {
   }
 
   async load(id: string): Promise<ProcessedAreaData | null> {
-    if (await this.isLocked(id)) {
+    if (this.isLocked(id)) {
       throw new Error(`File ${id} is locked`);
     }
 

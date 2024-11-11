@@ -8,11 +8,33 @@ import type {
 } from "geojson";
 import type { Storage } from "./storage";
 import { randomUUIDv7 } from "bun";
+import { getErrorMessage } from "./utils";
 
 export class BuildingAreaService {
   constructor(private storage: Storage<ProcessedAreaData>) {}
 
-  public async processAndStoreBuildingAreaData(
+  public async deleteBuildingArea(id: string): Promise<void> {
+    await this.storage.delete(id);
+  }
+
+  public async getBuildingAreaData(id: string): Promise<LoadAreaDataResult> {
+    try {
+      const data = await this.storage.load(id);
+      return {
+        success: true,
+        data,
+      };
+    } catch (err) {
+      console.log(err);
+
+      return {
+        success: false,
+        errors: [getErrorMessage(err)],
+      };
+    }
+  }
+
+  public async processAndSaveBuildingAreaData(
     buildingAreaInput: BuildingAreaInput,
     id = randomUUIDv7()
   ): Promise<ProcessedAndStoredAreaDataResult> {
@@ -22,7 +44,7 @@ export class BuildingAreaService {
       return processedAreaDataResult;
     }
 
-    const saveAreaDataResult = await this.storeBuildingAreaData(
+    const saveAreaDataResult = await this.saveBuildingAreaData(
       id,
       processedAreaDataResult.data
     );
@@ -40,35 +62,42 @@ export class BuildingAreaService {
   public processAreaData(
     buildingAreaData: BuildingAreaInput
   ): ProcessAreaDataResult {
-    const { buildingLimits, heightPlateaus } =
-      this.formatAreaData(buildingAreaData);
+    try {
+      const { buildingLimits, heightPlateaus } =
+        this.formatAreaData(buildingAreaData);
 
-    const splitBuildingLimits = this.getSplitBuildingLimits(
-      buildingLimits,
-      heightPlateaus
-    );
+      const splitBuildingLimits = this.getSplitBuildingLimits(
+        buildingLimits,
+        heightPlateaus
+      );
 
-    const processedAreaData: ProcessedAreaData = {
-      buildingLimits: buildingLimits,
-      heightPlateaus: heightPlateaus,
-      splitBuildingLimits: splitBuildingLimits,
-    };
+      const processedAreaData: ProcessedAreaData = {
+        buildingLimits: buildingLimits,
+        heightPlateaus: heightPlateaus,
+        splitBuildingLimits: splitBuildingLimits,
+      };
 
-    const validationErrors = this.validateProcessedData(processedAreaData);
-    if (validationErrors.length > 0) {
+      const validationErrors = this.validateProcessedData(processedAreaData);
+      if (validationErrors.length > 0) {
+        return {
+          success: false,
+          errors: validationErrors,
+        };
+      }
+
+      return {
+        success: true,
+        data: processedAreaData,
+      };
+    } catch (err) {
       return {
         success: false,
-        errors: validationErrors,
+        errors: [getErrorMessage(err)],
       };
     }
-
-    return {
-      success: true,
-      data: processedAreaData,
-    };
   }
 
-  private async storeBuildingAreaData(
+  private async saveBuildingAreaData(
     id: string,
     data: ProcessedAreaData
   ): Promise<SaveAreaDataResult> {
@@ -78,11 +107,9 @@ export class BuildingAreaService {
     } catch (err) {
       console.log(err);
 
-      const message =
-        err instanceof Error ? err.message : `Unexpected error type: ${err}`;
       return {
         success: false,
-        errors: [message],
+        errors: [getErrorMessage(err)],
       };
     }
   }
@@ -183,6 +210,13 @@ interface FailureWithErrors {
 export type SaveAreaDataResult =
   | {
       success: true;
+    }
+  | FailureWithErrors;
+
+export type LoadAreaDataResult =
+  | {
+      success: true;
+      data: ProcessedAreaData | null;
     }
   | FailureWithErrors;
 

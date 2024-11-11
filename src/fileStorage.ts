@@ -1,5 +1,6 @@
 import type { ProcessedAreaData } from "./buildingAreaService";
 import type { Storage, DataLock } from "./storage";
+import { unlink } from "node:fs/promises";
 
 export class FileStorage implements Storage<ProcessedAreaData> {
   private readonly locks: { [id: string]: boolean } = {};
@@ -31,6 +32,11 @@ export class FileStorage implements Storage<ProcessedAreaData> {
       return null;
     }
     return JSON.parse(contents);
+  }
+
+  async delete(id: string): Promise<void> {
+    const filename = this.filenameFromId(id);
+    await unlink(filename);
   }
 
   private lock(id: string): DataLock {

@@ -8,9 +8,11 @@ import {
   getRightHPlatCoords,
   getSmallLeftHPlatCoords,
 } from "./dataGenerators";
+import { FileStorage } from "../src/fileStorage";
 
 // TODO: dependency injection
-const buildingAreaService = new BuildingAreaService();
+const fileStorage = new FileStorage();
+const buildingAreaService = new BuildingAreaService(fileStorage);
 
 describe("BuildingAreaService", () => {
   describe("processAreaData", () => {

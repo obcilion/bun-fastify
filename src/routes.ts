@@ -1,10 +1,15 @@
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { BuildingAreaSchema } from "./schemas";
 import type { FastifyInstance } from "fastify";
-import { BuildingAreaService } from "./buildingAreaService";
+import {
+  BuildingAreaService,
+  type ProcessAreaDataResult,
+} from "./buildingAreaService";
+import { FileStorage } from "./fileStorage";
 
 // TODO: dependency injection
-const buildingAreaService = new BuildingAreaService();
+const fileStorage = new FileStorage();
+const buildingAreaService = new BuildingAreaService(fileStorage);
 
 export async function routes(fastify: FastifyInstance, _options: any) {
   const server = fastify.withTypeProvider<TypeBoxTypeProvider>();
@@ -15,11 +20,22 @@ export async function routes(fastify: FastifyInstance, _options: any) {
         body: BuildingAreaSchema,
       },
     },
-    (request, reply) => {
-      const processedAreaData =
-        buildingAreaService.processAndStoreBuildingAreaData(request.body);
+    async (request, reply) => {
+      const processedAreaDataResult =
+        await buildingAreaService.processAndStoreBuildingAreaData(request.body);
 
-      return reply.status(201).send({ result: processedAreaData });
+      if (!processedAreaDataResult.success) {
+        return reply.status(400).send({
+          errors: processedAreaDataResult.errors,
+        });
+      }
+
+      const result = {
+        id: processedAreaDataResult.id,
+        data: processedAreaDataResult.data,
+      };
+
+      return reply.status(201).send({ result });
     }
   );
 }

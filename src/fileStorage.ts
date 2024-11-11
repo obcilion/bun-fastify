@@ -3,21 +3,26 @@ import type { Storage, DataLock } from "./storage";
 
 export class FileStorage implements Storage<ProcessedAreaData> {
   private readonly locks: { [id: string]: boolean } = {};
+  private readonly baseFilePath = "./fileStore";
 
   async save(id: string, data: ProcessedAreaData): Promise<void> {
-    if (await this.isLocked(id)) {
-      throw new Error("File is locked");
+    if (this.isLocked(id)) {
+      throw new Error(`File ${id} is locked`);
     }
+
+    const lock = this.lock(id);
 
     const filename = this.filenameFromId(id);
     const jsonData = JSON.stringify(data);
 
-    await Bun.write(`./${filename}`, jsonData);
+    await Bun.write(filename, jsonData);
+
+    this.unlock(lock);
   }
 
   async load(id: string): Promise<ProcessedAreaData | null> {
     if (await this.isLocked(id)) {
-      throw new Error("File is locked");
+      throw new Error(`File ${id} is locked`);
     }
 
     const filename = this.filenameFromId(id);
@@ -28,8 +33,8 @@ export class FileStorage implements Storage<ProcessedAreaData> {
     return JSON.parse(contents);
   }
 
-  async lock(id: string): Promise<DataLock> {
-    if (await this.isLocked(id)) {
+  private lock(id: string): DataLock {
+    if (this.isLocked(id)) {
       return { id };
     }
 
@@ -38,20 +43,20 @@ export class FileStorage implements Storage<ProcessedAreaData> {
     return { id };
   }
 
-  async unlock(lock: DataLock): Promise<void> {
-    if (!(await this.isLocked(lock.id))) {
+  private unlock(lock: DataLock): void {
+    if (!this.isLocked(lock.id)) {
       return;
     }
 
     this.locks[lock.id] = false;
   }
 
-  private async isLocked(id: string): Promise<boolean> {
+  private isLocked(id: string): boolean {
     return this.locks[id] || false;
   }
 
   private filenameFromId(id: string): string {
-    return `${id}.json`;
+    return `${this.baseFilePath}/${id}.json`;
   }
 
   private async readTextFile(filename: string): Promise<string | null> {

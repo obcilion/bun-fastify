@@ -3,17 +3,17 @@ import { BuildingAreaService } from "../src/buildingAreaService";
 import {
   getBuildingAreaInput,
   getLeftHPlatCoords,
-  getMiddlebLimCoords,
+  getMiddlebLimCoords as getMiddleBLimCoords,
   getRightHPlatCoords,
 } from "./dataGenerators";
 import { FileStorage } from "../src/fileStorage";
 
-// In an ideal world this test would not depend on the bulding area service,
-//  instead getting the test data directly from a generator
-const buildingAreaService = new BuildingAreaService();
-
 // TODO: dependency injection
 const fileStorage = new FileStorage();
+
+// In an ideal world this test would not depend on the bulding area service,
+//  instead getting the test data directly from a generator
+const buildingAreaService = new BuildingAreaService(fileStorage);
 
 describe("FileStorage", () => {
   test("it correctly saves and loads a file", async () => {
@@ -31,35 +31,11 @@ describe("FileStorage", () => {
     const loadedData = await fileStorage.load(id);
     expect(loadedData).toBeNull();
   });
-
-  test("it locks files correctly", async () => {
-    const processedAreaData = getProcessedData();
-    const id = "lockTest";
-    await fileStorage.save(id, processedAreaData);
-    const lock = await fileStorage.lock(id);
-
-    const loadFunc = async () => {
-      await fileStorage.load(id);
-    };
-
-    expect(loadFunc).toThrow();
-
-    const saveFunc = async () => {
-      await fileStorage.save(id, processedAreaData);
-    };
-
-    expect(saveFunc).toThrow();
-
-    await fileStorage.unlock(lock);
-
-    await fileStorage.load(id);
-    await fileStorage.save(id, processedAreaData);
-  });
 });
 
 function getProcessedData() {
   const testData = getBuildingAreaInput(
-    getMiddlebLimCoords(),
+    getMiddleBLimCoords(),
     getLeftHPlatCoords(),
     getRightHPlatCoords()
   );

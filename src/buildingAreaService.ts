@@ -6,14 +6,35 @@ import type {
   GeoJsonProperties,
   MultiPolygon,
 } from "geojson";
+import type { Storage } from "./storage";
+import { randomUUIDv7 } from "bun";
 
 export class BuildingAreaService {
-  public processAndStoreBuildingAreaData(buildingAreaInput: BuildingAreaInput) {
-    const processedAreaData = this.processAreaData(buildingAreaInput);
+  constructor(private storage: Storage<ProcessedAreaData>) {}
 
-    // TODO: store data
+  public async processAndStoreBuildingAreaData(
+    buildingAreaInput: BuildingAreaInput,
+    id = randomUUIDv7()
+  ): Promise<ProcessedAndStoredAreaDataResult> {
+    const processedAreaDataResult = this.processAreaData(buildingAreaInput);
 
-    return processedAreaData;
+    if (!processedAreaDataResult.success) {
+      return processedAreaDataResult;
+    }
+
+    const saveAreaDataResult = await this.storeBuildingAreaData(
+      id,
+      processedAreaDataResult.data
+    );
+    if (!saveAreaDataResult.success) {
+      return saveAreaDataResult;
+    }
+
+    return {
+      success: true,
+      id,
+      data: processedAreaDataResult.data,
+    };
   }
 
   public processAreaData(
@@ -45,6 +66,25 @@ export class BuildingAreaService {
       success: true,
       data: processedAreaData,
     };
+  }
+
+  private async storeBuildingAreaData(
+    id: string,
+    data: ProcessedAreaData
+  ): Promise<SaveAreaDataResult> {
+    try {
+      await this.storage.save(id, data);
+      return { success: true };
+    } catch (err) {
+      console.log(err);
+
+      const message =
+        err instanceof Error ? err.message : `Unexpected error type: ${err}`;
+      return {
+        success: false,
+        errors: [message],
+      };
+    }
   }
 
   public validateProcessedData(data: ProcessedAreaData): string[] {
@@ -133,7 +173,23 @@ export type ProcessAreaDataResult =
       success: true;
       data: ProcessedAreaData;
     }
+  | FailureWithErrors;
+
+interface FailureWithErrors {
+  success: false;
+  errors: string[];
+}
+
+export type SaveAreaDataResult =
   | {
-      success: false;
-      errors: string[];
-    };
+      success: true;
+    }
+  | FailureWithErrors;
+
+export type ProcessedAndStoredAreaDataResult =
+  | {
+      success: true;
+      id: string;
+      data: ProcessedAreaData;
+    }
+  | FailureWithErrors;

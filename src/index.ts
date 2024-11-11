@@ -11,10 +11,13 @@ fastify.register(routes);
  * Run the server!
  */
 const start = async () => {
-  const parsedPort = parseInt(process.env["PORT"] ?? "");
+  const parsedPort = parseInt(process.env["PORT"] || "");
   const port = Number.isNaN(parsedPort) ? 3000 : parsedPort;
   try {
-    await fastify.listen({ port: port });
+    await fastify.listen({
+      port: port,
+      host: "0.0.0.0",
+    });
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
